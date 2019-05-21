@@ -12,6 +12,7 @@
   - [Linux & MacOS](#Linux&MacOS)
 - [Usage](#usage)
 - [TODO](#todo)
+- [Disclaimer](#disclaimer)
 - [Authors](#authors)
 - [License](#license)
 
