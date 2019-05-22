@@ -14,6 +14,7 @@
 - [TODO](#todo)
 - [Disclaimer](#disclaimer)
 - [Authors](#authors)
+- [Contact](#contact)
 - [License](#license)
 
 ## Prerequisites
@@ -93,6 +94,10 @@ Set the driver for the bot to firefox:
 ## Authors
 
 * **Michał Wróblewski** - Main Developer - [DeBos99](https://github.com/DeBos99)
+
+## Contact
+
+Discord: DeBos#3292
 
 ## License
 
