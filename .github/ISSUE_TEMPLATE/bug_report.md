@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Description**
+Clearly describe the problem.
+
 **Command**
 Executed command.
 
