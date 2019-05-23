@@ -41,7 +41,6 @@ def bot():
 				update_proxies()
 			proxy=proxies.pop()
 			print(proxy)
-			user_agent=choice(user_agents) if args.user_agent else user_agents.random
 			try:
 				if args.driver=='chrome':
 					chrome_options=webdriver.ChromeOptions()
