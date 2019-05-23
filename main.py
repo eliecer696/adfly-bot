@@ -8,6 +8,7 @@ from random import choice,uniform
 from argparse import ArgumentParser
 from threading import Thread
 from traceback import print_exc
+from requests.exceptions import ConnectionError
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException,WebDriverException
 from selenium.webdriver.common.proxy import Proxy,ProxyType
@@ -77,6 +78,7 @@ try:
 			urls=list(filter(None,open(args.url,'r').read().split('\n')))
 		else:
 			urls=[args.url]
+	urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
 	update_proxies()
 	for i in range(args.threads):
 		t=Thread(target=bot)
