@@ -1,15 +1,16 @@
 import re
 import requests
 from os import _exit,path,devnull
-from sys import stdin
+from sys import stdin,stdout
 from time import sleep
 from random import choice,uniform
+from colorama import Fore
 from argparse import ArgumentParser
 from threading import Thread
 from traceback import print_exc
 from collections import deque
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException,WebDriverException
+from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException
 from selenium.webdriver.common.proxy import Proxy,ProxyType
 
 parser=ArgumentParser()
@@ -24,6 +25,16 @@ def exit(exit_code):
 	if exit_code!=0:
 		print_exc()
 	_exit(exit_code)
+def print(message):
+	if message.startswith('[ERROR]'):
+		colour=Fore.RED
+	elif message.startswith('[WARNING]'):
+		colour=Fore.YELLOW
+	elif message.startswith('[INFO]'):
+		colour=Fore.GREEN
+	else:
+		colour=Fore.RESET
+	stdout.write('%s%s%s\n'%(colour,message,Fore.RESET))
 def update_proxies():
 	global proxies
 	if args.proxies:
@@ -32,15 +43,15 @@ def update_proxies():
 		proxies=re.findall(re.compile('<td>([\d.]+)</td>'),str(requests.get('https://www.sslproxies.org/').content))
 		proxies=['%s:%s'%x for x in list(zip(proxies[0::2],proxies[1::2]))]
 	proxies=deque(proxies)
-	print('%d proxies successfully loaded!'%len(proxies))
-def bot():
+	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
+def bot(id):
 	try:
 		while True:
 			url=choice(urls)
 			if len(proxies)==0:
 				update_proxies()
 			proxy=proxies.pop()
-			print(proxy)
+			print('[INFO][%d] Connecting to %s'%(id,proxy))
 			try:
 				if args.driver=='chrome':
 					chrome_options=webdriver.ChromeOptions()
@@ -59,15 +70,22 @@ def bot():
 					firefox_profile.set_preference('network.proxy.ssl_port',proxy.split(':')[1])
 					firefox_profile.update_preferences()
 					driver=webdriver.Firefox(firefox_profile=firefox_profile,options=options,service_log_path=devnull)
+				print('[INFO][%d] Successully started webdriver!'%id)
 				driver.set_page_load_timeout(120);
 				try:
 					driver.get(url)
 					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
+						print('[INFO][%d] Website successfully loaded!'%id)
 						driver.find_element_by_id('skip_bu2tton').click()
 						print('Success!')
+					else:
+						print('[WARNING][%d] Dead proxy eliminated!'%id)
 					driver.quit()
-				except TimeoutException:pass
-			except WebDriverException:pass
+				except TimeoutException:
+					print('[WARNING][%d] Request timed out!'%id)
+				except NoSuchWindowException:
+					print('[ERROR][%d] Window has been closed unexpectedly!'%id)
+			except WebDriverException:exit(1)
 	except KeyboardInterrupt:exit(0)
 	except:exit(1)
 
@@ -80,7 +98,7 @@ try:
 	urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
 	update_proxies()
 	for i in range(args.threads):
-		t=Thread(target=bot)
+		t=Thread(target=bot,args=(i+1,))
 		t.daemon=True
 		t.start()
 		sleep(uniform(2.0,4.0))
