@@ -65,8 +65,8 @@ def bot():
 					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
 						driver.find_element_by_id('skip_bu2tton').click()
 						print('Success!')
+					driver.quit()
 				except TimeoutException:pass
-				driver.quit()
 			except WebDriverException:pass
 	except KeyboardInterrupt:exit(0)
 	except:exit(1)
