@@ -79,7 +79,7 @@ def bot(id):
 						print('[INFO][%d] Website successfully loaded!'%id)
 						sleep(5)
 						driver.find_element_by_id('skip_bu2tton').click()
-						print('Success!')
+						print('[INFO][%d] Ad successfully viewed!'%id)
 					else:
 						print('[WARNING][%d] Dead proxy eliminated!'%id)
 				except TimeoutException:
