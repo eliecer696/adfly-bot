@@ -1,5 +1,4 @@
 import re
-import queue
 import requests
 from os import _exit,path
 from sys import stdin
@@ -8,7 +7,7 @@ from random import choice,uniform
 from argparse import ArgumentParser
 from threading import Thread
 from traceback import print_exc
-from requests.exceptions import ConnectionError
+from collections import deque
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException,WebDriverException
 from selenium.webdriver.common.proxy import Proxy,ProxyType
@@ -32,7 +31,7 @@ def update_proxies():
 	else:
 		proxies=re.findall(re.compile('<td>([\d.]+)</td>'),str(requests.get('https://www.sslproxies.org/').content))
 		proxies=['%s:%s'%x for x in list(zip(proxies[0::2],proxies[1::2]))]
-	proxies=queue.deque(proxies)
+	proxies=deque(proxies)
 	print('%d proxies successfully loaded!'%len(proxies))
 def bot():
 	try:
