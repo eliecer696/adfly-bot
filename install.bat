@@ -1,3 +1,4 @@
+@echo off
 title AdFly-Bot installer
 color 0a
 where python >nul 2>nul
