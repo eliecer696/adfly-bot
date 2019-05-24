@@ -11,7 +11,7 @@ from threading import Thread
 from traceback import print_exc
 from collections import deque
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException
+from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,ElementNotVisibleException
 from selenium.webdriver.common.proxy import Proxy,ProxyType
 
 parser=ArgumentParser()
@@ -77,6 +77,7 @@ def bot(id):
 					driver.get(url)
 					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
 						print('[INFO][%d] Website successfully loaded!'%id)
+						sleep(7)
 						driver.find_element_by_id('skip_bu2tton').click()
 						print('Success!')
 					else:
@@ -86,6 +87,8 @@ def bot(id):
 					print('[WARNING][%d] Request timed out!'%id)
 				except NoSuchWindowException:
 					print('[ERROR][%d] Window has been closed unexpectedly!'%id)
+				except ElementNotVisibleException:
+					print('[ERROR][%d] Skip ad button not found!'%id)
 			except WebDriverException:exit(1)
 	except KeyboardInterrupt:exit(0)
 	except:exit(1)
