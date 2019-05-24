@@ -82,13 +82,13 @@ def bot(id):
 						print('Success!')
 					else:
 						print('[WARNING][%d] Dead proxy eliminated!'%id)
-					driver.quit()
 				except TimeoutException:
 					print('[WARNING][%d] Request timed out!'%id)
 				except NoSuchWindowException:
 					print('[ERROR][%d] Window has been closed unexpectedly!'%id)
 				except ElementNotVisibleException:
 					print('[ERROR][%d] Skip ad button not found!'%id)
+				driver.quit()
 			except WebDriverException:exit(1)
 	except KeyboardInterrupt:exit(0)
 	except:exit(1)
