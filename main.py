@@ -12,7 +12,6 @@ from traceback import print_exc
 from collections import deque
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,NoSuchElementException
-from selenium.webdriver.common.proxy import Proxy,ProxyType
 
 parser=ArgumentParser()
 parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
