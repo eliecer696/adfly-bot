@@ -1,5 +1,7 @@
 # AdFly-Bot
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **AdFly-Bot** is bot created for [adf.ly](https://adf.ly/) website.
 
 ## Content
