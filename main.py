@@ -11,7 +11,7 @@ from threading import Thread
 from traceback import print_exc
 from collections import deque
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,NoSuchElementException,ElementNotVisibleException
+from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,NoSuchElementException,ElementNotVisibleException,ElementClickInterceptedException
 
 parser=ArgumentParser()
 parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
@@ -88,6 +88,10 @@ def bot(id):
 					print('[ERROR][%d] Window has been closed unexpectedly!'%id)
 				except (NoSuchElementException,ElementNotVisibleException):
 					print('[ERROR][%d] Skip ad button not found!'%id)
+				except ElementNotVisibleException:
+					print('[ERROR][%d] Skip ad button is not visible!'%id)
+				except ElementClickInterceptedException:
+					print('[ERROR][%d] Skip ad button could not be clicked!'%id)
 				driver.quit()
 			except WebDriverException:exit(1)
 	except KeyboardInterrupt:exit(0)
