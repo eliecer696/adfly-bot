@@ -9,6 +9,7 @@ from colorama import Fore
 from argparse import ArgumentParser
 from threading import Thread
 from traceback import print_exc
+from user_agent import generate_user_agent
 from collections import deque
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,NoSuchElementException,ElementNotVisibleException,ElementClickInterceptedException
@@ -17,6 +18,7 @@ parser=ArgumentParser()
 parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
 parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
 parser.add_argument('-p','--proxies',help='set the path of the proxies list')
+parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
 parser.add_argument('-d','--driver',help='set the driver for the bot',choices=['chrome','firefox'],default='chrome')
 parser.add_argument('-hd','--headless',help='set the driver as headless',action='store_true')
 args=parser.parse_args()
@@ -52,16 +54,20 @@ def bot(id):
 				update_proxies()
 			proxy=proxies.pop()
 			print('[INFO][%d] Connecting to %s'%(id,proxy))
+			user_agent=choice(user_agents) if args.user_agent else user_agents()
+			print('[INFO][%d] Setting user agent to %s'%(id,user_agent))
 			try:
 				if args.driver=='chrome':
 					chrome_options=webdriver.ChromeOptions()
 					chrome_options.add_argument('--proxy-server={}'.format(proxy))
+					chrome_options.add_argument('--user-agent={}'.format(user_agent))
 					if args.headless:
 						chrome_options.add_argument('--headless')
 					driver=webdriver.Chrome(options=chrome_options)
 				else:
 					firefox_options=webdriver.FirefoxOptions()
 					firefox_options.preferences.update({
+						'general.useragent.override':user_agent,
 						'network.proxy.type':1,
 						'network.proxy.http':proxy.split(':')[0],
 						'network.proxy.http_port':int(proxy.split(':')[1]),
@@ -105,6 +111,13 @@ try:
 			urls=[args.url]
 	urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
 	update_proxies()
+	if args.user_agent:
+		if path.isfile(args.user_agent):
+			user_agents=list(filter(None,open(args.user_agent,'r').read().split('\n')))
+		else:
+			user_agents=[args.user_agent]
+	else:
+		user_agents=generate_user_agent
 	for i in range(args.threads):
 		t=Thread(target=bot,args=(i+1,))
 		t.daemon=True
