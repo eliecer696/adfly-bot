@@ -83,7 +83,9 @@ def bot(id):
 					driver.get(url)
 					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
 						print('[INFO][%d] Website successfully loaded!'%id)
-						sleep(5)
+						while driver.find_element_by_id('countdown').get_attribute('innerHTML')!='0 seconds':
+							sleep(1)
+						sleep(1)
 						driver.find_element_by_id('skip_bu2tton').click()
 						print('[INFO][%d] Ad successfully viewed!'%id)
 					else:
