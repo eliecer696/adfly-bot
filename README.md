@@ -19,6 +19,8 @@
 ![GitHub issues](https://img.shields.io/github/issues-raw/DeBos99/adfly-bot.svg?color=cc2020&labelColor=ff3030&style=for-the-badge)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/DeBos99/adfly-bot.svg?color=10aa10&labelColor=30ff30&style=for-the-badge)
 
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NH8JV53DSVDMY)
+
 **AdFly-Bot** is bot created for [adf.ly](https://adf.ly/) website.
 
 ## Content
