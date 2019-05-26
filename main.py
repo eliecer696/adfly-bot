@@ -80,6 +80,7 @@ def bot(id):
 				print('[INFO][%d] Successully started webdriver!'%id)
 				driver.set_page_load_timeout(120);
 				try:
+					print('[INFO][%d] Opening %s'%(id,url))
 					driver.get(url)
 					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
 						print('[INFO][%d] Website successfully loaded!'%id)
