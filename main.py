@@ -125,7 +125,6 @@ try:
 		t=Thread(target=bot,args=(i+1,))
 		t.daemon=True
 		t.start()
-		sleep(uniform(2.0,4.0))
 	stdin.read(1)
 	exit(0)
 except KeyboardInterrupt:exit(0)
