@@ -29,10 +29,15 @@ def exit(exit_code):
 	global drivers,pool
 	if exit_code==1:
 		print_exc()
-	for driver in drivers:
-		try:psutil.Process(driver).terminate()
-		except:pass
-	pool.terminate()
+	try:drivers
+	except NameError:pass
+	else:
+		for driver in drivers:
+			try:psutil.Process(driver).terminate()
+			except:pass
+	try:Pool
+	except NameError:pass
+	else:pool.terminate()
 	_exit(exit_code)
 def print(message):
 	if message.startswith('[ERROR]'):
@@ -130,34 +135,35 @@ def bot(lock,drivers,exceptions,proxies,id):
 		exceptions.append(format_exc())
 		lock.release()
 
-try:
-	if args.url:
-		if path.isfile(args.url):
-			urls=list(filter(None,open(args.url,'r').read().split('\n')))
+if __name__=='__main__':
+	try:
+		if args.url:
+			if path.isfile(args.url):
+				urls=list(filter(None,open(args.url,'r').read().split('\n')))
+			else:
+				urls=[args.url]
+		urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
+		if args.user_agent:
+			if path.isfile(args.user_agent):
+				user_agents=list(filter(None,open(args.user_agent,'r').read().split('\n')))
+			else:
+				user_agents=[args.user_agent]
 		else:
-			urls=[args.url]
-	urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
-	if args.user_agent:
-		if path.isfile(args.user_agent):
-			user_agents=list(filter(None,open(args.user_agent,'r').read().split('\n')))
-		else:
-			user_agents=[args.user_agent]
-	else:
-		user_agents=generate_user_agent
-	manager=Manager()
-	lock=manager.Lock()
-	drivers=manager.list()
-	exceptions=manager.list()
-	proxies=manager.list()
-	pool=Pool(processes=args.threads)
-	pool.map_async(partial(bot,lock,drivers,exceptions,proxies),range(1,args.threads+1))
-	while True:
-		if len(exceptions)>0:
-			for e in exceptions:
-				print(e)
-			exit(2)
-		sleep(0.25)
-except KeyboardInterrupt:
-	try:exit(0)
-	except:pass
-except:exit(1)
+			user_agents=generate_user_agent
+		manager=Manager()
+		lock=manager.Lock()
+		drivers=manager.list()
+		exceptions=manager.list()
+		proxies=manager.list()
+		pool=Pool(processes=args.threads)
+		pool.map_async(partial(bot,lock,drivers,exceptions,proxies),range(1,args.threads+1))
+		while True:
+			if len(exceptions)>0:
+				for e in exceptions:
+					print(e)
+				exit(2)
+			sleep(0.25)
+	except KeyboardInterrupt:
+		try:exit(0)
+		except:pass
+	except:exit(1)
