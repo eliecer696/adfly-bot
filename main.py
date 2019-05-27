@@ -57,7 +57,7 @@ def get_proxies():
 		proxies=['%s:%s'%x for x in list(zip(proxies[0::2],proxies[1::2]))]
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
-def bot(lock,drivers,exceptions,proxies,id):
+def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 	try:
 		while True:
 			url=choice(urls)
@@ -156,7 +156,7 @@ if __name__=='__main__':
 		exceptions=manager.list()
 		proxies=manager.list()
 		pool=Pool(processes=args.threads)
-		pool.map_async(partial(bot,lock,drivers,exceptions,proxies),range(1,args.threads+1))
+		pool.map_async(partial(bot,lock,drivers,exceptions,urls,user_agents,proxies),range(1,args.threads+1))
 		while True:
 			if len(exceptions)>0:
 				for e in exceptions:
