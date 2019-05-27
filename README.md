@@ -100,6 +100,7 @@ cd ..
 | -us PATH<br>--user-agent PATH   | Sets the path to the list of user agents to **PATH**. |                                |
 | -dr DRIVER<br>--driver DRIVER   | Sets the webdriver to **DRIVER**.                     | Chrome.                        |
 | -hd<br>--headless               | Sets the webdriver as headless.                       | False.                         |
+| -s<br>--slow-start              | Starts webdrivers one by one.                         | False.                         |
 
 ## Disclaimer
 

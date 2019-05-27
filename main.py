@@ -1,31 +1,38 @@
 from __future__ import print_function
 import re
+import psutil
 import requests
 from os import _exit,path,devnull
-from sys import stdin,stdout
+from sys import stdout
 from time import sleep
 from random import choice,uniform
 from colorama import Fore
 from argparse import ArgumentParser
-from threading import Thread
-from traceback import print_exc
+from functools import partial
+from traceback import format_exc,print_exc
 from user_agent import generate_user_agent
-from collections import deque
+from multiprocessing import Pool,Manager
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException,WebDriverException,NoSuchWindowException,NoSuchElementException,ElementNotVisibleException,ElementClickInterceptedException
+from selenium.common.exceptions import *
 
 parser=ArgumentParser()
 parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
 parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
 parser.add_argument('-p','--proxies',help='set the path of the proxies list')
 parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
-parser.add_argument('-d','--driver',help='set the driver for the bot',choices=['chrome','firefox'],default='chrome')
-parser.add_argument('-hd','--headless',help='set the driver as headless',action='store_true')
+parser.add_argument('-d','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
+parser.add_argument('-hd','--headless',help='set the webdriver as headless',action='store_true')
+parser.add_argument('-s','--slow-start',help='starts webdrivers one by one',action='store_true')
 args=parser.parse_args()
 
 def exit(exit_code):
-	if exit_code!=0:
+	global drivers,pool
+	if exit_code==1:
 		print_exc()
+	for driver in drivers:
+		try:psutil.Process(driver).terminate()
+		except:pass
+	pool.terminate()
 	_exit(exit_code)
 def print(message):
 	if message.startswith('[ERROR]'):
@@ -37,26 +44,29 @@ def print(message):
 	else:
 		colour=Fore.RESET
 	stdout.write('%s%s%s\n'%(colour,message,Fore.RESET))
-def update_proxies():
-	global proxies
+def get_proxies():
 	if args.proxies:
 		proxies=list(filter(None,open(args.proxies,'r').read().split('\n')))
 	else:
 		proxies=re.findall(re.compile('<td>([\d.]+)</td>'),str(requests.get('https://www.sslproxies.org/').content))
 		proxies=['%s:%s'%x for x in list(zip(proxies[0::2],proxies[1::2]))]
-	proxies=deque(proxies)
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
-def bot(id):
+	return proxies
+def bot(lock,drivers,exceptions,proxies,id):
 	try:
 		while True:
 			url=choice(urls)
+			lock.acquire()
 			if len(proxies)==0:
-				update_proxies()
+				proxies.extend(get_proxies())
+			lock.release()
 			proxy=proxies.pop()
 			print('[INFO][%d] Connecting to %s'%(id,proxy))
 			user_agent=choice(user_agents) if args.user_agent else user_agents()
 			print('[INFO][%d] Setting user agent to %s'%(id,user_agent))
 			try:
+				if args.slow_start:
+					lock.acquire()
 				if args.driver=='chrome':
 					chrome_options=webdriver.ChromeOptions()
 					chrome_options.add_argument('--proxy-server={}'.format(proxy))
@@ -77,34 +87,48 @@ def bot(id):
 					if args.headless:
 						firefox_options.add_argument('--headless')
 					driver=webdriver.Firefox(options=firefox_options,service_log_path=devnull)
+				process=driver.service.process
+				pid=process.pid
+				cpids=[x.pid for x in psutil.Process(pid).children()]
+				pids=[pid]+cpids
+				drivers.extend(pids)
+				if args.slow_start:
+					lock.release()
 				print('[INFO][%d] Successully started webdriver!'%id)
 				driver.set_page_load_timeout(120);
-				try:
-					print('[INFO][%d] Opening %s'%(id,url))
-					driver.get(url)
-					if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
-						print('[INFO][%d] Website successfully loaded!'%id)
-						while driver.find_element_by_id('countdown').get_attribute('innerHTML')!='0 seconds':
-							sleep(1)
+				print('[INFO][%d] Opening %s'%(id,url))
+				driver.get(url)
+				if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
+					print('[INFO][%d] Website successfully loaded!'%id)
+					while driver.find_element_by_id('countdown').get_attribute('innerHTML')!='0 seconds':
 						sleep(1)
-						driver.find_element_by_id('skip_bu2tton').click()
-						print('[INFO][%d] Ad successfully viewed!'%id)
-					else:
-						print('[WARNING][%d] Dead proxy eliminated!'%id)
-				except TimeoutException:
-					print('[WARNING][%d] Request timed out!'%id)
-				except NoSuchWindowException:
-					print('[ERROR][%d] Window has been closed unexpectedly!'%id)
-				except (NoSuchElementException,ElementNotVisibleException):
-					print('[ERROR][%d] Skip ad button not found!'%id)
-				except ElementNotVisibleException:
-					print('[ERROR][%d] Skip ad button is not visible!'%id)
-				except ElementClickInterceptedException:
-					print('[ERROR][%d] Skip ad button could not be clicked!'%id)
+					sleep(1)
+					driver.find_element_by_id('skip_bu2tton').click()
+					print('[INFO][%d] Ad successfully viewed!'%id)
+				else:
+					print('[WARNING][%d] Dead proxy eliminated!'%id)
+			except TimeoutException:
+				print('[WARNING][%d] Request timed out!'%id)
+			except NoSuchWindowException:
+				print('[ERROR][%d] Window has been closed unexpectedly!'%id)
+			except (NoSuchElementException,ElementNotVisibleException):
+				print('[ERROR][%d] Skip ad button not found!'%id)
+			except ElementNotVisibleException:
+				print('[ERROR][%d] Skip ad button is not visible!'%id)
+			except ElementClickInterceptedException:
+				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
+			finally:
+				lock.acquire()
+				print('[INFO][%d] Quitting webdriver!'%d)
 				driver.quit()
-			except WebDriverException:exit(1)
-	except KeyboardInterrupt:exit(0)
-	except:exit(1)
+				for pid in pids:
+					drivers.remove(pid)
+				lock.release()
+	except KeyboardInterrupt:pass
+	except Exception as e:
+		lock.acquire()
+		exceptions.append(format_exc())
+		lock.release()
 
 try:
 	if args.url:
@@ -113,7 +137,6 @@ try:
 		else:
 			urls=[args.url]
 	urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
-	update_proxies()
 	if args.user_agent:
 		if path.isfile(args.user_agent):
 			user_agents=list(filter(None,open(args.user_agent,'r').read().split('\n')))
@@ -121,11 +144,20 @@ try:
 			user_agents=[args.user_agent]
 	else:
 		user_agents=generate_user_agent
-	for i in range(args.threads):
-		t=Thread(target=bot,args=(i+1,))
-		t.daemon=True
-		t.start()
-	stdin.read(1)
-	exit(0)
-except KeyboardInterrupt:exit(0)
+	manager=Manager()
+	lock=manager.Lock()
+	drivers=manager.list()
+	exceptions=manager.list()
+	proxies=manager.list()
+	pool=Pool(processes=args.threads)
+	pool.map_async(partial(bot,lock,drivers,exceptions,proxies),range(1,args.threads+1))
+	while True:
+		if len(exceptions)>0:
+			for e in exceptions:
+				print(e)
+			exit(2)
+		sleep(0.25)
+except KeyboardInterrupt:
+	try:exit(0)
+	except:pass
 except:exit(1)
