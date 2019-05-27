@@ -119,7 +119,7 @@ def bot(lock,drivers,exceptions,proxies,id):
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
 			finally:
 				lock.acquire()
-				print('[INFO][%d] Quitting webdriver!'%d)
+				print('[INFO][%d] Quitting webdriver!'%id)
 				driver.quit()
 				for pid in pids:
 					drivers.remove(pid)
