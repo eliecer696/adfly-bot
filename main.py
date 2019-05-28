@@ -35,7 +35,7 @@ def exit(exit_code):
 		for driver in drivers:
 			try:psutil.Process(driver).terminate()
 			except:pass
-	try:Pool
+	try:pool
 	except NameError:pass
 	else:pool.terminate()
 	_exit(exit_code)
