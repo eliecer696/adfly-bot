@@ -127,7 +127,8 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 				print('[INFO][%d] Quitting webdriver!'%id)
 				driver.quit()
 				for pid in pids:
-					drivers.remove(pid)
+					try:drivers.remove(pid)
+					except:pass
 				lock.release()
 	except KeyboardInterrupt:pass
 	except:exceptions.append(format_exc())
