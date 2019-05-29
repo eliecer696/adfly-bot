@@ -39,20 +39,20 @@ def print(message):
 	else:
 		colour=Fore.RESET
 	stdout.write('%s%s%s\n'%(colour,message,Fore.RESET))
-def get_proxies():
+def get_proxies(args):
 	if args.proxies:
 		proxies=open(args.proxies,'r').read().strip().split('\n')
 	else:
 		proxies=requests.get('https://www.proxy-list.download/api/v1/get?type=https&anon=elite').content.decode().strip().split('\r\n')
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
-def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
+def bot(lock,args,urls,user_agents,proxies,drivers,exceptions,id):
 	try:
 		while True:
 			url=choice(urls)
 			with lock:
 				if len(proxies)==0:
-					proxies.extend(get_proxies())
+					proxies.extend(get_proxies(args))
 				proxy=choice(proxies)
 				proxies.remove(proxy)
 			print('[INFO][%d] Connecting to %s'%(id,proxy))
@@ -103,6 +103,12 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 					print('[INFO][%d] Ad successfully viewed!'%id)
 				else:
 					print('[WARNING][%d] Dead proxy eliminated!'%id)
+				with lock:
+					print('[INFO][%d] Quitting webdriver!'%id)
+					driver.quit()
+					for pid in pids:
+						try:drivers.remove(pid)
+						except:pass
 			except TimeoutException:
 				print('[WARNING][%d] Request timed out!'%id)
 			except NoSuchWindowException:
@@ -113,13 +119,6 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 				print('[ERROR][%d] Skip ad button is not visible!'%id)
 			except ElementClickInterceptedException:
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
-			finally:
-				with lock:
-					print('[INFO][%d] Quitting webdriver!'%id)
-					driver.quit()
-					for pid in pids:
-						try:drivers.remove(pid)
-						except:pass
 	except KeyboardInterrupt:pass
 	except:exceptions.append(format_exc())
 
@@ -153,7 +152,7 @@ if __name__=='__main__':
 		exceptions=manager.list()
 		proxies=manager.list()
 		pool=Pool(processes=args.threads)
-		pool.map_async(partial(bot,lock,drivers,exceptions,urls,user_agents,proxies),range(1,args.threads+1))
+		pool.map_async(partial(bot,lock,args,urls,user_agents,proxies,drivers,exceptions),range(1,args.threads+1))
 		while True:
 			if len(exceptions)>0:
 				for e in exceptions:
