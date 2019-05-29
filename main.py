@@ -8,10 +8,9 @@ from time import sleep
 from random import choice
 from colorama import Fore
 from argparse import ArgumentParser
-from functools import partial
 from traceback import format_exc,print_exc
+from threading import Thread,Lock
 from user_agent import generate_user_agent
-from multiprocessing import Pool,Manager
 from selenium import webdriver
 from selenium.common.exceptions import *
 
@@ -25,9 +24,6 @@ def exit(exit_code):
 		for driver in drivers:
 			try:psutil.Process(driver).terminate()
 			except:pass
-	try:pool
-	except NameError:pass
-	else:pool.terminate()
 	_exit(exit_code)
 def print(message):
 	if message.startswith('[ERROR]'):
@@ -39,20 +35,22 @@ def print(message):
 	else:
 		colour=Fore.RESET
 	stdout.write('%s%s%s\n'%(colour,message,Fore.RESET))
-def get_proxies(args):
+def get_proxies():
+	global args
 	if args.proxies:
 		proxies=open(args.proxies,'r').read().strip().split('\n')
 	else:
 		proxies=requests.get('https://www.proxy-list.download/api/v1/get?type=https&anon=elite').content.decode().strip().split('\r\n')
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
-def bot(lock,args,urls,user_agents,proxies,drivers,exceptions,id):
-	try:
-		while True:
+def bot(id):
+	global lock,urls,user_agents,proxies
+	while True:
+		try:
 			url=choice(urls)
 			with lock:
 				if len(proxies)==0:
-					proxies.extend(get_proxies(args))
+					proxies.extend(get_proxies())
 				proxy=choice(proxies)
 				proxies.remove(proxy)
 			print('[INFO][%d] Connecting to %s'%(id,proxy))
@@ -103,12 +101,6 @@ def bot(lock,args,urls,user_agents,proxies,drivers,exceptions,id):
 					print('[INFO][%d] Ad successfully viewed!'%id)
 				else:
 					print('[WARNING][%d] Dead proxy eliminated!'%id)
-				with lock:
-					print('[INFO][%d] Quitting webdriver!'%id)
-					driver.quit()
-					for pid in pids:
-						try:drivers.remove(pid)
-						except:pass
 			except TimeoutException:
 				print('[WARNING][%d] Request timed out!'%id)
 			except NoSuchWindowException:
@@ -119,15 +111,22 @@ def bot(lock,args,urls,user_agents,proxies,drivers,exceptions,id):
 				print('[ERROR][%d] Skip ad button is not visible!'%id)
 			except ElementClickInterceptedException:
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
-	except KeyboardInterrupt:pass
-	except:exceptions.append(format_exc())
+			finally:
+				with lock:
+					print('[INFO][%d] Quitting webdriver!'%id)
+					driver.quit()
+					for pid in pids:
+						try:drivers.remove(pid)
+						except:pass
+		except KeyboardInterrupt:pass
+		except:exception=format_exc()
 
 if __name__=='__main__':
 	try:
 		parser=ArgumentParser()
-		parser.add_argument('-p','--processes',type=int,help='set number of the processes',default=15)
+		parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
 		parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
-		parser.add_argument('-pr','--proxies',help='set the path of the proxies list')
+		parser.add_argument('-p','--proxies',help='set the path of the proxies list')
 		parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
 		parser.add_argument('-d','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
 		parser.add_argument('-hd','--headless',help='set the webdriver as headless',action='store_true')
@@ -135,31 +134,30 @@ if __name__=='__main__':
 		args=parser.parse_args()
 		if args.url:
 			if path.isfile(args.url):
-				urls=list(filter(None,open(args.url,'r').read().split('\n')))
+				urls=open(args.url,'r').read().strip().split('\n')
 			else:
 				urls=[args.url]
 		urls=[re.sub(r'\A(?:https?://)?(.*)\Z',r'https://\1',x) for x in urls]
 		if args.user_agent:
 			if path.isfile(args.user_agent):
-				user_agents=list(filter(None,open(args.user_agent,'r').read().split('\n')))
+				user_agents=open(args.user_agent,'r').read().strip().split('\n')
 			else:
 				user_agents=[args.user_agent]
 		else:
 			user_agents=generate_user_agent
-		manager=Manager()
-		lock=manager.Lock()
-		drivers=manager.list()
-		exceptions=manager.list()
-		proxies=manager.list()
-		pool=Pool(processes=args.processes)
-		pool.map_async(partial(bot,lock,args,urls,user_agents,proxies,drivers,exceptions),range(1,args.processes+1))
+		lock=Lock()
+		drivers=[]
+		proxies=[]
+		for i in range(args.threads):
+			t=Thread(target=bot,args=(i+1,))
+			t.daemon=True
+			t.start()
 		while True:
-			if len(exceptions)>0:
-				for e in exceptions:
-					print(e)
+			try:exception
+			except:pass
+			else:
+				print(exception)
 				exit(2)
 			sleep(0.25)
-	except KeyboardInterrupt:
-		try:exit(0)
-		except:pass
+	except KeyboardInterrupt:exit(0)
 	except:exit(1)
