@@ -1,5 +1,5 @@
 psutil
-requests
+requests[security]
 argparse
 selenium
 colorama

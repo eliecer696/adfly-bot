@@ -32,7 +32,7 @@ case "$(uname -s)" in
 					commands=$(cat<<-EOT
 						$commands
 						$install python-pip
-						sudo pip install -r requirements.txt
+						sudo pip install -Ur requirements.txt
 					EOT
 					)
 					break
@@ -41,7 +41,7 @@ case "$(uname -s)" in
 					commands=$(cat<<-EOT
 						$commands
 						$install python-setuptools
-						sudo easy_install \$(cat requirements.txt)
+						sudo easy_install -U \$(cat requirements.txt)
 					EOT
 					)
 					break
@@ -86,7 +86,7 @@ case "$(uname -s)" in
 		commands=$(cat<<-EOT
 			brew update && brew upgrade
 			brew install python
-			pip install -r requirements.txt
+			pip install -Ur requirements.txt
 		EOT
 		)
 		echo "Select browser for the bot."

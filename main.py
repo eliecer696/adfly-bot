@@ -15,16 +15,6 @@ from multiprocessing import Pool,Manager
 from selenium import webdriver
 from selenium.common.exceptions import *
 
-parser=ArgumentParser()
-parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
-parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
-parser.add_argument('-p','--proxies',help='set the path of the proxies list')
-parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
-parser.add_argument('-d','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
-parser.add_argument('-hd','--headless',help='set the webdriver as headless',action='store_true')
-parser.add_argument('-s','--slow-start',help='starts webdrivers one by one',action='store_true')
-args=parser.parse_args()
-
 def exit(exit_code):
 	global drivers,pool
 	if exit_code==1:
@@ -51,21 +41,20 @@ def print(message):
 	stdout.write('%s%s%s\n'%(colour,message,Fore.RESET))
 def get_proxies():
 	if args.proxies:
-		proxies=list(filter(None,open(args.proxies,'r').read().split('\n')))
+		proxies=open(args.proxies,'r').read().strip().split('\n')
 	else:
-		proxies=re.findall(re.compile('<td>([\d.]+)</td>'),str(requests.get('https://www.sslproxies.org/').content))
-		proxies=['%s:%s'%x for x in list(zip(proxies[0::2],proxies[1::2]))]
+		proxies=requests.get('https://www.proxy-list.download/api/v1/get?type=https&anon=elite').content.decode().strip().split('\r\n')
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
 def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 	try:
 		while True:
 			url=choice(urls)
-			lock.acquire()
-			if len(proxies)==0:
-				proxies.extend(get_proxies())
-			lock.release()
-			proxy=proxies.pop()
+			with lock:
+				if len(proxies)==0:
+					proxies.extend(get_proxies())
+				proxy=choice(proxies)
+				proxies.remove(proxy)
 			print('[INFO][%d] Connecting to %s'%(id,proxy))
 			user_agent=choice(user_agents) if args.user_agent else user_agents()
 			print('[INFO][%d] Setting user agent to %s'%(id,user_agent))
@@ -76,12 +65,14 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 					chrome_options=webdriver.ChromeOptions()
 					chrome_options.add_argument('--proxy-server={}'.format(proxy))
 					chrome_options.add_argument('--user-agent={}'.format(user_agent))
+					chrome_options.add_argument('--mute-audio')
 					if args.headless:
 						chrome_options.add_argument('--headless')
 					driver=webdriver.Chrome(options=chrome_options)
 				else:
 					firefox_options=webdriver.FirefoxOptions()
 					firefox_options.preferences.update({
+						'media.volume_scale':'0.0',
 						'general.useragent.override':user_agent,
 						'network.proxy.type':1,
 						'network.proxy.http':proxy.split(':')[0],
@@ -100,7 +91,7 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 				if args.slow_start:
 					lock.release()
 				print('[INFO][%d] Successully started webdriver!'%id)
-				driver.set_page_load_timeout(120);
+				driver.set_page_load_timeout(30);
 				print('[INFO][%d] Opening %s'%(id,url))
 				driver.get(url)
 				if not any(x in driver.page_source for x in ['ERR_','<html><head></head><body></body></html>']):
@@ -123,18 +114,26 @@ def bot(lock,drivers,exceptions,urls,user_agents,proxies,id):
 			except ElementClickInterceptedException:
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
 			finally:
-				lock.acquire()
-				print('[INFO][%d] Quitting webdriver!'%id)
-				driver.quit()
-				for pid in pids:
-					try:drivers.remove(pid)
-					except:pass
-				lock.release()
+				with lock:
+					print('[INFO][%d] Quitting webdriver!'%id)
+					driver.quit()
+					for pid in pids:
+						try:drivers.remove(pid)
+						except:pass
 	except KeyboardInterrupt:pass
 	except:exceptions.append(format_exc())
 
 if __name__=='__main__':
 	try:
+		parser=ArgumentParser()
+		parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
+		parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
+		parser.add_argument('-p','--proxies',help='set the path of the proxies list')
+		parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
+		parser.add_argument('-d','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
+		parser.add_argument('-hd','--headless',help='set the webdriver as headless',action='store_true')
+		parser.add_argument('-s','--slow-start',help='starts webdrivers one by one',action='store_true')
+		args=parser.parse_args()
 		if args.url:
 			if path.isfile(args.url):
 				urls=list(filter(None,open(args.url,'r').read().split('\n')))
