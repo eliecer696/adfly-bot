@@ -5,7 +5,7 @@ import requests
 from os import _exit,path,devnull
 from sys import stdout
 from time import sleep
-from random import choice,uniform
+from random import choice
 from colorama import Fore
 from argparse import ArgumentParser
 from functools import partial
