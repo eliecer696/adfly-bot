@@ -44,11 +44,11 @@ def get_proxies():
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
 def bot(id):
-	global lock,elock,urls,user_agents,proxies
+	global locks,urls,user_agents,proxies
 	while True:
 		try:
 			url=choice(urls)
-			with lock:
+			with locks[0]:
 				if len(proxies)==0:
 					proxies.extend(get_proxies())
 				proxy=choice(proxies)
@@ -58,7 +58,7 @@ def bot(id):
 			print('[INFO][%d] Setting user agent to %s'%(id,user_agent))
 			try:
 				if args.slow_start:
-					lock.acquire()
+					locks[1].acquire()
 				if args.driver=='chrome':
 					chrome_options=webdriver.ChromeOptions()
 					chrome_options.add_argument('--proxy-server={}'.format(proxy))
@@ -87,7 +87,7 @@ def bot(id):
 				pids=[pid]+cpids
 				drivers.extend(pids)
 				if args.slow_start:
-					lock.release()
+					locks[1].release()
 				print('[INFO][%d] Successully started webdriver!'%id)
 				driver.set_page_load_timeout(30);
 				print('[INFO][%d] Opening %s'%(id,url))
@@ -112,7 +112,7 @@ def bot(id):
 			except ElementClickInterceptedException:
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
 			finally:
-				with lock:
+				with locks[2]:
 					print('[INFO][%d] Quitting webdriver!'%id)
 					try:driver.quit()
 					except:print('[ERROR][%d] Error quitting webdriver!'%id)
@@ -121,7 +121,7 @@ def bot(id):
 						except:pass
 		except KeyboardInterrupt:pass
 		except:
-			with elock:exception=format_exc()
+			with locks[3]:exception=format_exc()
 
 if __name__=='__main__':
 	try:
@@ -147,8 +147,7 @@ if __name__=='__main__':
 				user_agents=[args.user_agent]
 		else:
 			user_agents=generate_user_agent
-		lock=Lock()
-		elock=Lock()
+		locks=[Lock() for _ in range(4)]
 		drivers=[]
 		proxies=[]
 		for i in range(args.threads):
