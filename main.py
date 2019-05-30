@@ -44,7 +44,7 @@ def get_proxies():
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
 def bot(id):
-	global lock,urls,user_agents,proxies
+	global lock,elock,urls,user_agents,proxies
 	while True:
 		try:
 			url=choice(urls)
@@ -120,7 +120,8 @@ def bot(id):
 						try:drivers.remove(pid)
 						except:pass
 		except KeyboardInterrupt:pass
-		except:exception=format_exc()
+		except:
+			with elock:exception=format_exc()
 
 if __name__=='__main__':
 	try:
@@ -147,6 +148,7 @@ if __name__=='__main__':
 		else:
 			user_agents=generate_user_agent
 		lock=Lock()
+		elock=Lock()
 		drivers=[]
 		proxies=[]
 		for i in range(args.threads):
