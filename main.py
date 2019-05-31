@@ -119,9 +119,12 @@ def bot(id):
 					try:driver
 					except NameError:pass
 					else:driver.quit()
-					for pid in pids:
-						try:drivers.remove(pid)
-						except:pass
+					try:pids
+					except NameError:pass
+					else:
+						for pid in pids:
+							try:drivers.remove(pid)
+							except:pass
 		except KeyboardInterrupt:pass
 		except:
 			if args.debug:
