@@ -15,7 +15,7 @@ from selenium import webdriver
 from selenium.common.exceptions import *
 
 def exit(exit_code):
-	global drivers,pool
+	global drivers
 	if exit_code==1:
 		print_exc()
 	try:drivers
