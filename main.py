@@ -116,10 +116,9 @@ def bot(id):
 			finally:
 				with locks[2]:
 					print('[INFO][%d] Quitting webdriver!'%id)
-					try:driver.quit()
-					except:
-						if args.debug:raise
-						else:print('[ERROR][%d] Error quitting webdriver!'%id)
+					try:driver
+					except NameError:pass
+					else:driver.quit()
 					for pid in pids:
 						try:drivers.remove(pid)
 						except:pass
