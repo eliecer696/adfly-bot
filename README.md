@@ -96,10 +96,11 @@ cd ..
 | -h<br>--help                    | Shows help message.                                   |                                |
 | -t T<br>--threads T             | Sets the number of threads to **T**.                  | 15                             |
 | -p PATH<br>--proxies PATH       | Sets the path to the list of proxies to **PATH**.     | Proxies list from internet.    |
-| -us AGENT<br>--user-agent AGENT | Sets the user agent to **AGENT**.                     | Randomly generated user agent. |
-| -us PATH<br>--user-agent PATH   | Sets the path to the list of user agents to **PATH**. |                                |
-| -dr DRIVER<br>--driver DRIVER   | Sets the webdriver to **DRIVER**.                     | Chrome.                        |
-| -hd<br>--headless               | Sets the webdriver as headless.                       | False.                         |
+| -U AGENT<br>--user-agent AGENT  | Sets the user agent to **AGENT**.                     | Randomly generated user agent. |
+| -U PATH<br>--user-agent PATH    | Sets the path to the list of user agents to **PATH**. |                                |
+| -d DRIVER<br>--driver DRIVER    | Sets the webdriver to **DRIVER**.                     | Chrome.                        |
+| -D<br>--debug                   | Enabled debug mode.                                   | False.
+| -H<br>--headless                | Sets the webdriver as headless.                       | False.                         |
 | -s<br>--slow-start              | Starts webdrivers one by one.                         | False.                         |
 
 ## Disclaimer

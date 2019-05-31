@@ -9,7 +9,7 @@ from random import seed,choice
 from colorama import Fore
 from argparse import ArgumentParser
 from traceback import format_exc,print_exc
-from threading import Thread,Lock
+from threading import Thread,Lock,Event
 from user_agent import generate_user_agent
 from selenium import webdriver
 from selenium.common.exceptions import *
@@ -44,7 +44,7 @@ def get_proxies():
 	print('[INFO][0] %d proxies successfully loaded!'%len(proxies))
 	return proxies
 def bot(id):
-	global locks,urls,user_agents,proxies
+	global args,locks,exception,exception_event,urls,user_agents,proxies
 	while True:
 		try:
 			url=choice(urls)
@@ -105,23 +105,31 @@ def bot(id):
 				print('[WARNING][%d] Request timed out!'%id)
 			except NoSuchWindowException:
 				print('[ERROR][%d] Window has been closed unexpectedly!'%id)
-			except (NoSuchElementException,ElementNotVisibleException):
+			except NoSuchElementException:
 				print('[ERROR][%d] Skip ad button not found!'%id)
 			except ElementNotVisibleException:
 				print('[ERROR][%d] Skip ad button is not visible!'%id)
 			except ElementClickInterceptedException:
 				print('[ERROR][%d] Skip ad button could not be clicked!'%id)
+			except WebDriverException:
+				print('[ERROR][%d] Webdriver error occured!'%id)
 			finally:
 				with locks[2]:
 					print('[INFO][%d] Quitting webdriver!'%id)
 					try:driver.quit()
-					except:print('[ERROR][%d] Error quitting webdriver!'%id)
+					except:
+						if args.debug:raise
+						else:print('[ERROR][%d] Error quitting webdriver!'%id)
 					for pid in pids:
 						try:drivers.remove(pid)
 						except:pass
 		except KeyboardInterrupt:pass
 		except:
-			with locks[3]:exception=format_exc()
+			if args.debug:
+				with locks[3]:
+					exception=format_exc()
+					exception_event.set()
+			else:print('[ERROR][%d] Unknown error occured!'%id)
 
 if __name__=='__main__':
 	try:
@@ -130,9 +138,10 @@ if __name__=='__main__':
 		parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
 		parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
 		parser.add_argument('-p','--proxies',help='set the path of the proxies list')
-		parser.add_argument('-us','--user-agent',help='set the user agent/set the path of to the list of user agents')
+		parser.add_argument('-U','--user-agent',help='set the user agent/set the path of to the list of user agents')
 		parser.add_argument('-d','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
-		parser.add_argument('-hd','--headless',help='set the webdriver as headless',action='store_true')
+		parser.add_argument('-D','--debug',help='enable debug mode',action='store_true')
+		parser.add_argument('-H','--headless',help='set the webdriver as headless',action='store_true')
 		parser.add_argument('-s','--slow-start',help='starts webdrivers one by one',action='store_true')
 		args=parser.parse_args()
 		if args.url:
@@ -149,18 +158,15 @@ if __name__=='__main__':
 		else:
 			user_agents=generate_user_agent
 		locks=[Lock() for _ in range(4)]
+		exception_event=Event()
 		drivers=[]
 		proxies=[]
 		for i in range(args.threads):
 			t=Thread(target=bot,args=(i+1,))
 			t.daemon=True
 			t.start()
-		while True:
-			try:exception
-			except:pass
-			else:
-				print(exception)
-				exit(2)
-			sleep(0.25)
+		exception_event.wait()
+		print(exception)
+		exit(2)
 	except KeyboardInterrupt:exit(0)
 	except:exit(1)
