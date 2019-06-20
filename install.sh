@@ -6,22 +6,22 @@ case "$(uname -s)" in
 	Linux)
 		if [[ ! -z "$(which apt 2>/dev/null)" ]]; then
 			install="sudo apt install -y"
-			commands=$(cat<<-EOT
-				sudo apt update -y && sudo apt upgrade -y
-				sudo apt install python -y
-			EOT
-			)
+			commands="sudo apt update -y && sudo apt upgrade -y"
 		elif [[ ! -z "$(which pacman 2>/dev/null)" ]]; then
 			install="sudo pacman -S --noconfirm"
-			commands=$(cat<<-EOT
-				sudo pacman -Syu --noconfirm
-				sudo pacman -S python --noconfirm
-			EOT
-			)
+			commands="sudo pacman -Syu --noconfirm"
+		elif [[ ! -z "$(which yum 2>/dev/null)" ]]; then
+			install="sudo yum install -y"
+			commands="sudo yum -y update"
 		else
 			echo "Can't find package manager."
 			exit 1
 		fi
+		commands=$(cat<<-EOT
+			$commands
+			$install python
+		EOT
+		)
 
 		echo "Select python package installer."
 		options=("PIP" "Easy Install")
