@@ -163,15 +163,15 @@ def bot(id):
 if __name__=='__main__':
 	try:
 		parser=ArgumentParser()
-		parser.add_argument('-t','--threads',type=int,help='set number of the threads',default=15)
-		parser.add_argument('-u','--url',help='set url of the video/set the path of the urls list',default='',required=True)
-		parser.add_argument('-p','--proxies',help='set the path of the proxies list')
-		parser.add_argument('-U','--user-agent',help='set the user agent/set the path of to the list of user agents')
-		parser.add_argument('-D','--driver',help='set the webdriver for the bot',choices=['chrome','firefox'],default='chrome')
+		parser.add_argument('-t','--threads',type=int,help='set number of threads',default=15)
+		parser.add_argument('-u','--url',help='set url of video/set path to file with urls',default='',required=True)
+		parser.add_argument('-p','--proxies',help='set path to file with proxies')
+		parser.add_argument('-U','--user-agent',help='set user agent/set path to file with user agents')
+		parser.add_argument('-D','--driver',help='set webdriver',choices=['chrome','firefox'],default='chrome')
 		parser.add_argument('-v','--verbose',help='enable verbose mode',action='store_true')
 		parser.add_argument('-d','--debug',help='enable debug mode',action='store_true')
-		parser.add_argument('-H','--headless',help='set the webdriver as headless',action='store_true')
-		parser.add_argument('-s','--slow-start',help='starts webdrivers one by one',action='store_true')
+		parser.add_argument('-H','--headless',help='enable headless mode',action='store_true')
+		parser.add_argument('-s','--slow-start',help='enable slow start mode',action='store_true')
 		args=parser.parse_args()
 		args.verbose=args.debug or args.verbose
 		if args.url:

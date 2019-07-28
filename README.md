@@ -108,25 +108,25 @@ git clone "https://github.com/DeBos99/adfly-bot.git"
 
 ### Required arguments
 
-| Argument              | Description                                    |
-| :-------------------- | :--------------------------------------------- |
-| -u URL<br>--url URL   | Sets the url of video to **URL**.              |
-| -u PATH<br>--url PATH | Sets the path to the list of urls to **PATH**. |
+| Argument       | Description                  |
+| :------------- | :--------------------------- |
+| -u, --url URL  | Sets url of video.           |
+| -u, --url PATH | Sets path to file with urls. |
 
 ### Optional arguments
 
-| Argument                        | Description                                           | Default value                  |
-| :------------------------------ | :---------------------------------------------------- | :----------------------------- |
-| -h<br>--help                    | Shows help message.                                   |                                |
-| -t T<br>--threads T             | Sets the number of threads to **T**.                  | 15                             |
-| -p PATH<br>--proxies PATH       | Sets the path to the list of proxies to **PATH**.     | Proxies list from internet.    |
-| -U AGENT<br>--user-agent AGENT  | Sets the user agent to **AGENT**.                     | Randomly generated user agent. |
-| -U PATH<br>--user-agent PATH    | Sets the path to the list of user agents to **PATH**. | Randomly generated user agent. |
-| -D DRIVER<br>--driver DRIVER    | Sets the webdriver to **DRIVER**.                     | Chrome.                        |
-| -v<br>--verbose                 | Enables verbose mode.                                 | False.                         |
-| -d<br>--debug                   | Enables debug mode.                                   | False.                         |
-| -H<br>--headless                | Sets the webdriver as headless.                       | False.                         |
-| -s<br>--slow-start              | Starts webdrivers one by one.                         | False.                         |
+| Argument                      | Description                         | Default value                  |
+| :---------------------------- | :---------------------------------- | :----------------------------- |
+| -h, --help                    | Shows help message and exits.       |                                |
+| -t, --threads N               | Sets number of threads.             | 15                             |
+| -p, --proxies PATH            | Sets path to file with proxies.     | Proxies list from internet.    |
+| -U, --user-agent AGENT        | Sets user agent.                    | Randomly generated user agent. |
+| -U, --user-agent PATH         | Sets path to file with user agents. | Randomly generated user agent. |
+| -D, --driver {chrome,firefox} | Sets webdriver.                     | chrome                         |
+| -v, --verbose                 | Enables verbose mode.               | False                          |
+| -d, --debug                   | Enables debug mode.                 | False                          |
+| -H, --headless                | Enables headless mode.              | False                          |
+| -s, --slow-start              | Enables slow start mode.            | False                          |
 
 ## Disclaimer
 
