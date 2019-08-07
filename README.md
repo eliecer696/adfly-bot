@@ -45,12 +45,11 @@
 
 * Multi-threaded.
 * Support for multiple URLs.
-* IP rotation.
-* User agent rotation.
-* Support for chromedriver and Geckodriver.
-* 3 modes of verbosity.
+* Support for ChromeDriver and GeckoDriver.
 * Headless mode.
 * Slow start mode for older machines.
+* IP and User agent rotation.
+* Debug mode.
 
 ## Installation
 
@@ -119,14 +118,13 @@ git clone "https://github.com/DeBos99/adfly-bot.git"
 | :---------------------------- | :---------------------------------- | :----------------------------- |
 | -h, --help                    | Shows help message and exits.       |                                |
 | -t, --threads N               | Sets number of threads.             | 15                             |
+| -D, --driver {chrome,firefox} | Sets webdriver.                     | chrome                         |
+| -H, --headless                | Enables headless mode.              | False                          |
+| -s, --slow-start              | Enables slow start mode.            | False                          |
 | -p, --proxies PATH            | Sets path to file with proxies.     | Proxies list from internet.    |
 | -U, --user-agent AGENT        | Sets user agent.                    | Randomly generated user agent. |
 | -U, --user-agent PATH         | Sets path to file with user agents. | Randomly generated user agent. |
-| -D, --driver {chrome,firefox} | Sets webdriver.                     | chrome                         |
-| -v, --verbose                 | Enables verbose mode.               | False                          |
 | -d, --debug                   | Enables debug mode.                 | False                          |
-| -H, --headless                | Enables headless mode.              | False                          |
-| -s, --slow-start              | Enables slow start mode.            | False                          |
 
 ## Disclaimer
 
