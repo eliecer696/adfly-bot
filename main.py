@@ -99,7 +99,7 @@ def bot(id):
 				if args.headless:
 					chrome_options.add_argument('--headless')
 				if is_root():
-					chrome.options.add_argument('--no-sandbox')
+					chrome_options.add_argument('--no-sandbox')
 				if system()=='Windows':
 					executable_path=path_join(executable_dir,'chromedriver.exe')
 				else:
